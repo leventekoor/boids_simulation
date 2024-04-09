@@ -1,16 +1,11 @@
-{application, boids_simulation,
+{application,
+ boids_simulation,
  [{description, "A Cowboy OTP application"},
   {vsn, "0.1.0"},
   {registered, []},
   {mod, {boids_simulation_app, []}},
-  {applications,
-   [kernel,
-    stdlib,
-    cowboy
-   ]},
-  {env,[]},
+  {applications, [kernel, stdlib, cowboy]},
+  {env, [{boids_count, 10}]},
   {modules, []},
-
   {licenses, ["Apache 2.0"]},
-  {links, []}
- ]}.
+  {links, []}]}.
