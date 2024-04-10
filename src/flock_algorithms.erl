@@ -21,6 +21,21 @@ filter_out_non_perceived_boids(BoidState, BoidsStates, PerceptionRadius) ->
 filter_out_self(BoidState, BoidsStates) ->
     lists:filter(fun(BoidState2) -> BoidState2 /= BoidState end, BoidsStates).
 
+set_magnitude({X, Y}, Magnitude) ->
+    {X * Magnitude / math:sqrt(math:pow(X, 2) + math:pow(Y, 2)),
+     Y * Magnitude / math:sqrt(math:pow(X, 2) + math:pow(Y, 2))}.
+
+limit_magnitude({X, Y}, Limit) ->
+    case math:sqrt(math:pow(X, 2) + math:pow(Y, 2)) > Limit of
+        true ->
+            set_magnitude({X, Y}, Limit);
+        false ->
+            {X, Y}
+    end.
+
+subtract({X1, Y1}, {X2, Y2}) ->
+    {X1 - X2, Y1 - Y2}.
+
 flock(BoidState, BoidsStates) ->
     {X1, Y1} = alignment(BoidState, BoidsStates),
     {X2, Y2} = separation(BoidState, BoidsStates),
@@ -32,6 +47,7 @@ alignment(BoidState, BoidsStates) ->
         filter_out_non_perceived_boids(BoidState,
                                        filter_out_self(BoidState, BoidsStates),
                                        ?ALIGNMENT_PERCEPTION_RADIUS),
+
     {X, Y} =
         lists:foldl(fun(OtherBoidState, {XAcc, YAcc}) ->
                        {XAcc + OtherBoidState#boid_state.velocity#velocity.x,
@@ -39,12 +55,16 @@ alignment(BoidState, BoidsStates) ->
                     end,
                     {0, 0},
                     FilteredBoidsStates),
-    io:format("Alignment data: X: ~w, Y: ~w, state list length: ~w~n",
-              [X, Y, length(FilteredBoidsStates)]),
+
     if length(FilteredBoidsStates) == 0 ->
            {0, 0};
        true ->
-           {X / length(FilteredBoidsStates), Y / length(FilteredBoidsStates)}
+           limit_magnitude(subtract(set_magnitude({X / length(FilteredBoidsStates),
+                                                   Y / length(FilteredBoidsStates)},
+                                                  ?ACCELERATION_TARGET_MAGNITUDE),
+                                    {BoidState#boid_state.velocity#velocity.x,
+                                     BoidState#boid_state.velocity#velocity.y}),
+                           ?ACCELERATION_MAGNITUDE_LIMIT)
     end.
 
 separation(BoidState, BoidsStates) ->
@@ -63,13 +83,16 @@ separation(BoidState, BoidsStates) ->
                     end,
                     {0, 0},
                     FilteredBoidsStates),
-    io:format("Separation data: X: ~w, Y: ~w, state list length: ~w~n",
-              [X, Y, length(FilteredBoidsStates)]),
 
     if length(FilteredBoidsStates) == 0 ->
            {0, 0};
        true ->
-           {X / length(FilteredBoidsStates), Y / length(FilteredBoidsStates)}
+           limit_magnitude(subtract(set_magnitude({X / length(FilteredBoidsStates),
+                                                   Y / length(FilteredBoidsStates)},
+                                                  ?ACCELERATION_TARGET_MAGNITUDE),
+                                    {BoidState#boid_state.velocity#velocity.x,
+                                     BoidState#boid_state.velocity#velocity.y}),
+                           ?ACCELERATION_MAGNITUDE_LIMIT)
     end.
 
 cohesion(BoidState, BoidsStates) ->
@@ -84,10 +107,16 @@ cohesion(BoidState, BoidsStates) ->
                     end,
                     {0, 0},
                     FilteredBoidsStates),
-    io:format("Cohesion data: X: ~w, Y: ~w, state list length: ~w~n",
-              [X, Y, length(FilteredBoidsStates)]),
+
     if length(FilteredBoidsStates) == 0 ->
            {0, 0};
        true ->
-           {X / length(FilteredBoidsStates), Y / length(FilteredBoidsStates)}
+           limit_magnitude(subtract(set_magnitude(subtract({X / length(FilteredBoidsStates),
+                                                            Y / length(FilteredBoidsStates)},
+                                                           {BoidState#boid_state.position#position.x,
+                                                            BoidState#boid_state.position#position.y}),
+                                                  ?ACCELERATION_TARGET_MAGNITUDE),
+                                    {BoidState#boid_state.velocity#velocity.x,
+                                     BoidState#boid_state.velocity#velocity.y}),
+                           ?ACCELERATION_MAGNITUDE_LIMIT)
     end.
