@@ -4,7 +4,9 @@
 -define(MAX_ACCELERATION, 1).
 -define(STARTING_VELOCITY_MAGNIUDE_MIN, 1).
 -define(STARTING_VELOCITY_MAGNIUDE_MAX, 5).
--define(BOID_PERCEPTION_RADIUS, 10).
+-define(ALIGNMENT_PERCEPTION_RADIUS, 25).
+-define(SEPARATION_PERCEPTION_RADIUS, 25).
+-define(COHESION_PERCEPTION_RADIUS, 50).
 
 -record(position, {x :: float(), y :: float()}).
 -record(velocity, {x :: float(), y :: float()}).

@@ -67,7 +67,7 @@ wrap_position(#position{x = X, y = Y}) ->
     #position{x = wrap_coordinate(X, ?SIMULATION_WIDTH),
               y = wrap_coordinate(Y, ?SIMULATION_HEIGHT)}.
 
-filter_out_non_perceived_boids(BoidState, BoidsStates) ->
+filter_out_non_perceived_boids(BoidState, BoidsStates, PerceptionRadius) ->
     lists:filter(fun(OtherBoidState) ->
                     Distance =
                         math:sqrt(math:pow(BoidState#boid_state.position#position.x
@@ -76,7 +76,7 @@ filter_out_non_perceived_boids(BoidState, BoidsStates) ->
                                   + math:pow(BoidState#boid_state.position#position.y
                                              - OtherBoidState#boid_state.position#position.y,
                                              2)),
-                    Distance < ?BOID_PERCEPTION_RADIUS
+                    Distance < PerceptionRadius
                  end,
                  BoidsStates).
 
@@ -84,9 +84,7 @@ filter_out_self(BoidState, BoidsStates) ->
     lists:filter(fun(BoidState2) -> BoidState2 /= BoidState end, BoidsStates).
 
 update_boid(BoidState, BoidsStates) ->
-    FilteredBoidsStates =
-        filter_out_non_perceived_boids(BoidState, filter_out_self(BoidState, BoidsStates)),
-    {X, Y} = flock(BoidState, FilteredBoidsStates),
+    {X, Y} = flock(BoidState, BoidsStates),
     io:format("Flock data: X: ~w, Y: ~w~n", [X, Y]),
     CurrentAcceleration = #acceleration{x = X, y = Y},
     NewVelocity =
@@ -108,26 +106,38 @@ update_boid(BoidState, BoidsStates) ->
                          acceleration = #acceleration{x = 0, y = 0}}.
 
 flock(BoidState, BoidsStates) ->
-    {X1, Y1} = alignment(BoidsStates),
+    {X1, Y1} = alignment(BoidState, BoidsStates),
     {X2, Y2} = separation(BoidState, BoidsStates),
-    {X3, Y3} = cohesion(BoidsStates),
+    {X3, Y3} = cohesion(BoidState, BoidsStates),
     {X1 + X2 + X3, Y1 + Y2 + Y3};
 flock(_, []) ->
     {0, 0}.
 
-alignment(BoidsStates) ->
+alignment(BoidState, BoidsStates) ->
+    FilteredBoidsStates =
+        filter_out_non_perceived_boids(BoidState,
+                                       filter_out_self(BoidState, BoidsStates),
+                                       ?ALIGNMENT_PERCEPTION_RADIUS),
     {X, Y} =
         lists:foldl(fun(OtherBoidState, {XAcc, YAcc}) ->
                        {XAcc + OtherBoidState#boid_state.velocity#velocity.x,
                         YAcc + OtherBoidState#boid_state.velocity#velocity.y}
                     end,
                     {0, 0},
-                    BoidsStates),
+                    FilteredBoidsStates),
     io:format("Alignment data: X: ~w, Y: ~w, state list length: ~w~n",
-              [X, Y, length(BoidsStates)]),
-    {X / length(BoidsStates), Y / length(BoidsStates)}.
+              [X, Y, length(FilteredBoidsStates)]),
+    if length(FilteredBoidsStates) == 0 ->
+           {0, 0};
+       true ->
+           {X / length(FilteredBoidsStates), Y / length(FilteredBoidsStates)}
+    end.
 
 separation(BoidState, BoidsStates) ->
+    FilteredBoidsStates =
+        filter_out_non_perceived_boids(BoidState,
+                                       filter_out_self(BoidState, BoidsStates),
+                                       ?SEPARATION_PERCEPTION_RADIUS),
     {X, Y} =
         lists:foldl(fun(OtherBoidState, {XAcc, YAcc}) ->
                        {XAcc
@@ -138,19 +148,32 @@ separation(BoidState, BoidsStates) ->
                            - OtherBoidState#boid_state.position#position.y)}
                     end,
                     {0, 0},
-                    BoidsStates),
+                    FilteredBoidsStates),
     io:format("Separation data: X: ~w, Y: ~w, state list length: ~w~n",
-              [X, Y, length(BoidsStates)]),
-    {X / length(BoidsStates), Y / length(BoidsStates)}.
+              [X, Y, length(FilteredBoidsStates)]),
 
-cohesion(BoidsStates) ->
+    if length(FilteredBoidsStates) == 0 ->
+           {0, 0};
+       true ->
+           {X / length(FilteredBoidsStates), Y / length(FilteredBoidsStates)}
+    end.
+
+cohesion(BoidState, BoidsStates) ->
+    FilteredBoidsStates =
+        filter_out_non_perceived_boids(BoidState,
+                                       filter_out_self(BoidState, BoidsStates),
+                                       ?COHESION_PERCEPTION_RADIUS),
     {X, Y} =
         lists:foldl(fun(OtherBoidState, {XAcc, YAcc}) ->
                        {XAcc + OtherBoidState#boid_state.position#position.x,
                         YAcc + OtherBoidState#boid_state.position#position.y}
                     end,
                     {0, 0},
-                    BoidsStates),
+                    FilteredBoidsStates),
     io:format("Cohesion data: X: ~w, Y: ~w, state list length: ~w~n",
-              [X, Y, length(BoidsStates)]),
-    {X / length(BoidsStates), Y / length(BoidsStates)}.
+              [X, Y, length(FilteredBoidsStates)]),
+    if length(FilteredBoidsStates) == 0 ->
+           {0, 0};
+       true ->
+           {X / length(FilteredBoidsStates), Y / length(FilteredBoidsStates)}
+    end.
