@@ -69,8 +69,14 @@ wrap_position(#position{x = X, y = Y}) ->
 
 update_boid(BoidState, BoidsStates) ->
     {X, Y} = flock_algorithms:flock(BoidState, BoidsStates),
-    io:format("Flock data: X: ~w, Y: ~w~n", [X, Y]),
     CurrentAcceleration = #acceleration{x = X, y = Y},
+    NewPosition =
+        wrap_position(#position{x =
+                                    BoidState#boid_state.position#position.x
+                                    + BoidState#boid_state.velocity#velocity.x,
+                                y =
+                                    BoidState#boid_state.position#position.y
+                                    + BoidState#boid_state.velocity#velocity.y}),
     NewVelocity =
         clip_velocity(#velocity{x =
                                     BoidState#boid_state.velocity#velocity.x
@@ -78,13 +84,6 @@ update_boid(BoidState, BoidsStates) ->
                                 y =
                                     BoidState#boid_state.velocity#velocity.y
                                     + CurrentAcceleration#acceleration.y}),
-    NewPosition =
-        wrap_position(#position{x =
-                                    BoidState#boid_state.position#position.x
-                                    + NewVelocity#velocity.x,
-                                y =
-                                    BoidState#boid_state.position#position.y
-                                    + NewVelocity#velocity.y}),
     BoidState#boid_state{position = NewPosition,
                          velocity = NewVelocity,
                          acceleration = #acceleration{x = 0, y = 0}}.
