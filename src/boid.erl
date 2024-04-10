@@ -109,9 +109,7 @@ flock(BoidState, BoidsStates) ->
     {X1, Y1} = alignment(BoidState, BoidsStates),
     {X2, Y2} = separation(BoidState, BoidsStates),
     {X3, Y3} = cohesion(BoidState, BoidsStates),
-    {X1 + X2 + X3, Y1 + Y2 + Y3};
-flock(_, []) ->
-    {0, 0}.
+    {X1 + X2 + X3, Y1 + Y2 + Y3}.
 
 alignment(BoidState, BoidsStates) ->
     FilteredBoidsStates =
