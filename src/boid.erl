@@ -21,11 +21,11 @@ init([]) ->
 
 handle_call({get_state}, _From, State) ->
     {reply, State, State};
-handle_call({update, BoidsStates}, _From, State) ->
-    {reply, ok, update_boid(State, BoidsStates)};
 handle_call(_Request, _From, State) ->
     {reply, ignored, State}.
 
+handle_cast({update, BoidsStates}, State) ->
+    {noreply, update_boid(State, BoidsStates)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

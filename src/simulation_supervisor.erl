@@ -37,7 +37,7 @@ update_all_boids() ->
     AllBoidsStates = get_all_boids_states(),
     lists:map(fun({_, Pid, _, _}) ->
                  io:format("|-- Updating boid ~w~n", [Pid]),
-                 gen_server:call(Pid, {update, AllBoidsStates})
+                 gen_server:cast(Pid, {update, AllBoidsStates})
               end,
               Children).
 
