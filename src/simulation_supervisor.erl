@@ -13,28 +13,32 @@ spawn_boid() ->
     supervisor:start_child(?MODULE, []).
 
 spawn_boids(N) when is_integer(N), N > 1 ->
-    io:format("Spawning ~w boids...~n", [N]),
+    io:format("|- Spawning ~w boids...~n", [N]),
     lists:map(fun(_) -> spawn_boid() end, lists:seq(1, N));
 spawn_boids(1) ->
-    io:format("Spawning 1 boid...~n"),
+    io:format("|- Spawning 1 boid...~n"),
     spawn_boid().
 
 kill_boid(Id) ->
     supervisor:terminate_child(?MODULE, Id).
 
 kill_all_boids() ->
-    io:format("Killing all boids...~n"),
+    io:format("|- Killing all boids...~n"),
     Children = supervisor:which_children(?MODULE),
     lists:map(fun({_, Pid, _, _}) ->
-                 io:format("Killing boid ~w~n", [Pid]),
+                 io:format("|-- Killing boid ~w~n", [Pid]),
                  kill_boid(Pid)
               end,
               Children).
 
 update_all_boids() ->
+    io:format("|- Updating all boids...~n"),
     Children = supervisor:which_children(?MODULE),
     AllBoidsStates = get_all_boids_states(),
-    lists:map(fun({_, Pid, _, _}) -> gen_server:call(Pid, {update, AllBoidsStates}) end,
+    lists:map(fun({_, Pid, _, _}) ->
+                 io:format("|-- Updating boid ~w~n", [Pid]),
+                 gen_server:call(Pid, {update, AllBoidsStates})
+              end,
               Children).
 
 get_all_boids_states() ->

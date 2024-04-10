@@ -5,7 +5,7 @@
 -export([init/2]).
 
 init(Req0, State) ->
-    io:format("Resetting simulation...~n"),
+    io:format("|- Resetting simulation...~n"),
     simulation_supervisor:kill_all_boids(),
     {ok, StartingBoidsCount} = application:get_env(boids_simulation, boids_count),
     simulation_supervisor:spawn_boids(StartingBoidsCount),
