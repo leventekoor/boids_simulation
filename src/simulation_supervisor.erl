@@ -4,7 +4,8 @@
 
 -export([start_link/0]).
 -export([init/1]).
--export([spawn_boids/1, kill_all_boids/0, update_all_boids/0, get_all_boids_states/0]).
+-export([spawn_boids/1, kill_all_boids/0, update_all_boids/0, get_all_boids_states/0,
+         get_all_boids_positions/0]).
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
@@ -44,6 +45,10 @@ update_all_boids() ->
 get_all_boids_states() ->
     Children = supervisor:which_children(?MODULE),
     lists:map(fun({_, Pid, _, _}) -> gen_server:call(Pid, {get_state}) end, Children).
+
+get_all_boids_positions() ->
+    Children = supervisor:which_children(?MODULE),
+    lists:map(fun({_, Pid, _, _}) -> gen_server:call(Pid, {get_position}) end, Children).
 
 init([]) ->
     io:format("simulation_supervisor has started (~w)~n", [self()]),

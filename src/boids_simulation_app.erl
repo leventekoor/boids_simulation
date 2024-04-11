@@ -10,7 +10,8 @@
 start(_StartType, _StartArgs) ->
     Paths =
         [{"/reset", simulation_reset_handler, ?NO_OPTIONS},
-         {"/spawn", simulation_spawn_handler, ?NO_OPTIONS}],
+         {"/spawn", simulation_spawn_handler, ?NO_OPTIONS},
+         {"/update", simulation_update_handler, ?NO_OPTIONS}],
 
     Dispatch = cowboy_router:compile([{?ANY_HOST, Paths}]),
     {ok, _} =

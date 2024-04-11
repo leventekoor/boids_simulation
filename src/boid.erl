@@ -21,6 +21,10 @@ init([]) ->
 
 handle_call({get_state}, _From, State) ->
     {reply, State, State};
+handle_call({get_position}, _From, State) ->
+    {reply,
+     {State#boid_state.position#position.x, State#boid_state.position#position.y},
+     State};
 handle_call(_Request, _From, State) ->
     {reply, ignored, State}.
 
