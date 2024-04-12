@@ -36,10 +36,13 @@ limit_magnitude({X, Y}, Limit) ->
 subtract({X1, Y1}, {X2, Y2}) ->
     {X1 - X2, Y1 - Y2}.
 
+multiply({X, Y}, Factor) ->
+    {X * Factor, Y * Factor}.
+
 flock(BoidState, BoidsStates) ->
-    {X1, Y1} = alignment(BoidState, BoidsStates),
-    {X2, Y2} = separation(BoidState, BoidsStates),
-    {X3, Y3} = cohesion(BoidState, BoidsStates),
+    {X1, Y1} = multiply(alignment(BoidState, BoidsStates), 1.5),
+    {X2, Y2} = multiply(separation(BoidState, BoidsStates), 2),
+    {X3, Y3} = multiply(cohesion(BoidState, BoidsStates), 1),
     {X1 + X2 + X3, Y1 + Y2 + Y3}.
 
 alignment(BoidState, BoidsStates) ->
