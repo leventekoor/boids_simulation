@@ -8,12 +8,13 @@
          code_change/3]).
 
 -include("../include/simulation_common.hrl").
+-include("debug_log.hrl").
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
 init([]) ->
-    io:format("|-- boid has started (~w)~n", [self()]),
+    ?LOG("|-- boid has started (~w)~n", [self()]),
     {ok,
      #boid_state{position = random_position(),
                  velocity = random_velocity(),

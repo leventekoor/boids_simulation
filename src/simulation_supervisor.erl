@@ -7,6 +7,8 @@
 -export([spawn_boids/1, kill_all_boids/0, update_all_boids/0, get_all_boids_states/0,
          get_all_boids_positions/0]).
 
+-include("debug_log.hrl").
+
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
@@ -14,30 +16,30 @@ spawn_boid() ->
     supervisor:start_child(?MODULE, []).
 
 spawn_boids(N) when is_integer(N), N > 1 ->
-    io:format("|- Spawning ~w boids...~n", [N]),
+    ?LOG("|- Spawning ~w boids...~n", [N]),
     lists:map(fun(_) -> spawn_boid() end, lists:seq(1, N));
 spawn_boids(1) ->
-    io:format("|- Spawning 1 boid...~n"),
+    ?LOG("|- Spawning 1 boid...~n", []),
     spawn_boid().
 
 kill_boid(Id) ->
     supervisor:terminate_child(?MODULE, Id).
 
 kill_all_boids() ->
-    io:format("|- Killing all boids...~n"),
+    ?LOG("|- Killing all boids...~n", []),
     Children = supervisor:which_children(?MODULE),
     lists:map(fun({_, Pid, _, _}) ->
-                 io:format("|-- Killing boid ~w~n", [Pid]),
+                 ?LOG("|-- Killing boid ~w~n", [Pid]),
                  kill_boid(Pid)
               end,
               Children).
 
 update_all_boids() ->
-    io:format("|- Updating all boids...~n"),
+    ?LOG("|- Updating all boids...~n", []),
     Children = supervisor:which_children(?MODULE),
     AllBoidsStates = get_all_boids_states(),
     lists:map(fun({_, Pid, _, _}) ->
-                 io:format("|-- Updating boid ~w~n", [Pid]),
+                 ?LOG("|-- Updating boid ~w~n", [Pid]),
                  gen_server:cast(Pid, {update, AllBoidsStates})
               end,
               Children).
@@ -51,7 +53,7 @@ get_all_boids_positions() ->
     lists:map(fun({_, Pid, _, _}) -> gen_server:call(Pid, {get_position}) end, Children).
 
 init([]) ->
-    io:format("simulation_supervisor has started (~w)~n", [self()]),
+    ?LOG("simulation_supervisor has started (~w)~n", [self()]),
     SupFlags =
         #{strategy => simple_one_for_one,
           intensity => 5,
