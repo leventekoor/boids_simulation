@@ -10,7 +10,8 @@ init(Req0, State) ->
     {ok, StartingBoidsCount} = application:get_env(boids_simulation, boids_count),
     simulation_supervisor:spawn_boids(StartingBoidsCount),
     Req = cowboy_req:reply(200,
-                           #{<<"content-type">> => <<"text/plain">>},
+                           #{<<"content-type">> => <<"text/plain">>,
+                             <<"access-control-allow-origin">> => <<"*">>},
                            <<"Simulation reset!\n">>,
                            Req0),
     {ok, Req, State}.

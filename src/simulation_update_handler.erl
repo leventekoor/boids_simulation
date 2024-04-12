@@ -8,7 +8,8 @@ init(Req0, State) ->
     simulation_supervisor:update_all_boids(),
     JsonData = generate_json_data(simulation_supervisor:get_all_boids_positions()),
     Req = cowboy_req:reply(200,
-                           #{<<"content-type">> => <<"application/json">>},
+                           #{<<"content-type">> => <<"application/json">>,
+                             <<"access-control-allow-origin">> => <<"*">>},
                            JsonData,
                            Req0),
     {ok, Req, State}.
