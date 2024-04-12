@@ -1,7 +1,7 @@
 -module(flock_algorithms_test).
 
 -include_lib("eunit/include/eunit.hrl").
--include_lib("../include/simulation_common.hrl").
+-include("../src/simulation_common.hrl").
 
 % function to compare floats within a tolerance level
 assert_float_equal_2d({Expected_X, Expected_Y}, {Actual_X, Actual_Y}) ->

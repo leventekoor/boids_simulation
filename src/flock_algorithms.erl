@@ -1,6 +1,6 @@
 -module(flock_algorithms).
 
--include_lib("../include/simulation_common.hrl").
+-include("simulation_common.hrl").
 
 -export([filter_out_non_perceived_boids/3, filter_out_self/2, flock/2, alignment/2,
          separation/2, cohesion/2]).
