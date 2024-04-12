@@ -9,7 +9,8 @@
 
 start(_StartType, _StartArgs) ->
     Paths =
-        [{"/reset", simulation_reset_handler, ?NO_OPTIONS},
+        [{"/", cowboy_static, {priv_file, boids_simulation, "index.html"}},
+         {"/reset", simulation_reset_handler, ?NO_OPTIONS},
          {"/spawn", simulation_spawn_handler, ?NO_OPTIONS},
          {"/update", simulation_update_handler, ?NO_OPTIONS}],
 

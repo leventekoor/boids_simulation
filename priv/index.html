@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Erlang Boid Simulation</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+      }
+
+      #canvas-container {
+        position: relative;
+      }
+
+      canvas {
+        border: 2px solid black;
+        background-color: darkblue;
+      }
+
+      #button-container {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+      }
+
+      button {
+        margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container">
+      <canvas id="simulationCanvas" width="600" height="600"></canvas>
+    </div>
+    <div id="button-container">
+      <button id="start-button">Start simulation</button>
+      <button id="spawn-button">Spawn 10 boids</button>
+      <button id="reset-simulation">Reset simulation</button>
+    </div>
+
+    <script>
+      var now = Date.now()
+      var then = Date.now()
+      var elapsed = 0
+      var fps = 30 // this is also the server's tick rate
+      var fpsInterval = 1000 / fps
+
+      const canvas = document.getElementById('simulationCanvas')
+      const ctx = canvas.getContext('2d')
+
+      var boids = []
+
+      const drawBoids = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        for (let i = 0; i < boids.length; i++) {
+          const boid = boids[i]
+          ctx.beginPath()
+          ctx.arc((boid.x / 1000) * canvas.width, (boid.y / 1000) * canvas.height, 5, 0, Math.PI * 2)
+          ctx.fillStyle = 'white'
+          ctx.fill()
+        }
+      }
+
+      const resetSimulation = () => {
+        fetch('/reset', {
+          method: 'GET',
+        }).then((response) => response.text)
+      }
+
+      const updateBoids = () => {
+        fetch('/update', {
+          method: 'GET',
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            boids = data
+          })
+      }
+
+      const spawnBoids = () => {
+        fetch('/spawn', {
+          method: 'GET',
+        }).then((response) => response.text)
+      }
+
+      const simulate = () => {
+        updateBoids()
+
+        now = Date.now()
+        elapsed = now - then
+
+        if (elapsed > fpsInterval) {
+          then = now - (elapsed % fpsInterval)
+
+          drawBoids()
+        }
+        requestAnimationFrame(simulate)
+      }
+
+      document.getElementById('start-button').addEventListener('click', () => {
+        simulate()
+      })
+
+      document.getElementById('spawn-button').addEventListener('click', () => {
+        spawnBoids()
+      })
+
+      document.getElementById('reset-simulation').addEventListener('click', () => {
+        resetSimulation()
+      })
+    </script>
+  </body>
+</html>
