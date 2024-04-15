@@ -21,7 +21,7 @@
 
       canvas {
         border: 2px solid black;
-        background-color: darkblue;
+        background-color: #259faf;
       }
 
       #button-container {
@@ -36,33 +36,77 @@
         font-size: 16px;
         cursor: pointer;
       }
+
+      #simulation-status {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        z-index: 2;
+        font-size: large;
+      }
+
+      #simulation-status p {
+        margin: 0;
+      }
+
+      #simulation-boid-n-section {
+        visibility: hidden;
+      }
+
+      #simulation-status-text,
+      #simulation-boid-n-text {
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
+    <div id="simulation-status">
+      <p>Simulation status: <span id="simulation-status-text">Stopped</span></p>
+      <div id="simulation-boid-n-section">
+        <p>Number of boids: <span id="simulation-boid-n-text">0</span></p>
+      </div>
+    </div>
     <div id="canvas-container">
       <canvas id="simulationCanvas" width="600" height="600"></canvas>
     </div>
     <div id="button-container">
       <button id="start-button">Start simulation</button>
-      <button id="spawn-button">Spawn 10 boids</button>
+      <button disabled="true" id="spawn-button">Spawn 10 boids</button>
       <button id="reset-simulation">Reset simulation</button>
     </div>
 
     <script>
+      var simulationRunning = false
+      var simulationResetRequested = false
       var now = Date.now()
       var then = Date.now()
       var elapsed = 0
       var fps = 30 // this is also the server's tick rate
       var fpsInterval = 1000 / fps
 
+      const simulationStateButton = document.getElementById('start-button')
+      const spawnButton = document.getElementById('spawn-button')
+      const resetButton = document.getElementById('reset-simulation')
+
+      const simulationStatusText = document.getElementById('simulation-status-text')
+      const simulationBoidNSection = document.getElementById('simulation-boid-n-section')
+      const simulationBoidNText = document.getElementById('simulation-boid-n-text')
+
       const canvas = document.getElementById('simulationCanvas')
       const ctx = canvas.getContext('2d')
 
       var boids = []
 
-      const drawBoids = () => {
+      const clearCanvas = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
 
+      const drawBoids = () => {
+        clearCanvas()
         for (let i = 0; i < boids.length; i++) {
           const boid = boids[i]
           ctx.beginPath()
@@ -72,30 +116,36 @@
         }
       }
 
-      const resetSimulation = () => {
-        fetch('/reset', {
-          method: 'GET',
-        }).then((response) => response.text)
-      }
-
-      const updateBoids = () => {
-        fetch('/update', {
+      const resetSimulation = async () => {
+        simulationResetRequested = false
+        let response = await fetch('/reset', {
           method: 'GET',
         })
-          .then((response) => response.json())
-          .then((data) => {
-            boids = data
-          })
+        console.log(await response.text())
+        clearCanvas()
       }
 
-      const spawnBoids = () => {
-        fetch('/spawn', {
+      const updateBoids = async () => {
+        let response = await fetch('/update', {
           method: 'GET',
-        }).then((response) => response.text)
+        })
+        boids = await response.json()
       }
 
-      const simulate = () => {
-        updateBoids()
+      const spawnBoids = async () => {
+        let response = await fetch('/spawn', {
+          method: 'GET',
+        })
+        console.log(await response.text())
+      }
+
+      const tickSimulation = async () => {
+        if (!simulationRunning) {
+          return
+        }
+
+        await updateBoids()
+        simulationBoidNText.textContent = boids.length
 
         now = Date.now()
         elapsed = now - then
@@ -105,20 +155,47 @@
 
           drawBoids()
         }
-        requestAnimationFrame(simulate)
+
+        if (simulationResetRequested) {
+          await resetSimulation()
+        }
+
+        requestAnimationFrame(tickSimulation)
       }
 
-      document.getElementById('start-button').addEventListener('click', () => {
-        simulate()
+      simulationStateButton.addEventListener('click', () => {
+        if (!simulationRunning) {
+          simulationRunning = true
+          simulationStateButton.textContent = 'Stop simulation'
+          simulationStatusText.textContent = 'Running'
+          spawnButton.disabled = false
+          simulationBoidNSection.style.visibility = 'visible'
+          tickSimulation()
+        } else {
+          simulationRunning = false
+          simulationStateButton.textContent = 'Start simulation'
+          simulationStatusText.textContent = 'Stopped'
+          spawnButton.disabled = true
+          simulationBoidNSection.style.visibility = 'hidden'
+        }
       })
 
-      document.getElementById('spawn-button').addEventListener('click', () => {
+      spawnButton.addEventListener('click', () => {
+        if (!simulationRunning) {
+          alert('Start the simulation first!')
+          return
+        }
         spawnBoids()
       })
 
-      document.getElementById('reset-simulation').addEventListener('click', () => {
-        resetSimulation()
+      resetButton.addEventListener('click', () => {
+        simulationResetRequested = true
+        if (!simulationRunning) {
+          resetSimulation()
+        }
       })
+
+      resetSimulation()
     </script>
   </body>
 </html>
